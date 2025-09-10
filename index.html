@@ -25,34 +25,42 @@
       confettiCanvas.height = window.innerHeight;
 
       const confettiPieces = Array.from({ length: 150 }).map(() => ({
-        x: Math.random() * confettiCanvas.width,
-        y: Math.random() * confettiCanvas.height - confettiCanvas.height,
-        w: 10,
-        h: 20,
+        x: confettiCanvas.width / 2,
+        y: 0,
+        w: 8,
+        h: 14,
         color: `hsl(${Math.random() * 360}, 100%, 50%)`,
-        speed: Math.random() * 3 + 2,
-        rotation: Math.random() * 360
+        speedX: (Math.random() - 0.5) * 6, // spread left & right
+        speedY: Math.random() * 5 + 3, // falling down
+        rotation: Math.random() * 360,
+        alpha: 1
       }));
 
       function drawConfetti() {
         ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
         confettiPieces.forEach(p => {
+          if (p.alpha <= 0) return; // skip invisible
+
           ctx.save();
+          ctx.globalAlpha = p.alpha;
           ctx.translate(p.x, p.y);
           ctx.rotate(p.rotation * Math.PI / 180);
           ctx.fillStyle = p.color;
           ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
           ctx.restore();
 
-          p.y += p.speed;
-          p.rotation += p.speed;
-
-          if (p.y > confettiCanvas.height) {
-            p.y = -20;
-            p.x = Math.random() * confettiCanvas.width;
-          }
+          // update movement
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.rotation += p.speedX * 2;
+          p.alpha -= 0.01; // fade out gradually
         });
-        requestAnimationFrame(drawConfetti);
+
+        if (confettiPieces.some(p => p.alpha > 0)) {
+          requestAnimationFrame(drawConfetti);
+        } else {
+          ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        }
       }
 
       drawConfetti();
