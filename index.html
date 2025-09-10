@@ -19,66 +19,50 @@
     <canvas id="confetti" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>
     
     <script>
-      const canvas = document.getElementById('confetti');
-      const ctx = canvas.getContext('2d');
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const confettiCanvas = document.getElementById('confetti');
+      const ctx = confettiCanvas.getContext('2d');
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
 
-      class ConfettiPiece {
-        constructor() {
-          this.x = canvas.width / 2;
-          this.y = 0;
-          this.size = Math.random() * 8 + 4;
-          this.color = `hsl(${Math.random() * 360}, 80%, 60%)`;
-          this.speedX = (Math.random() - 0.5) * 6;
-          this.speedY = Math.random() * 4 + 3;
-          this.shape = Math.random() > 0.5 ? "circle" : "rect";
-          this.rotation = Math.random() * 360;
-        }
+      const confettiPieces = Array.from({ length: 150 }).map(() => ({
+        x: Math.random() * confettiCanvas.width,
+        y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+        w: 10,
+        h: 20,
+        color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+        speed: Math.random() * 3 + 2,
+        rotation: Math.random() * 360
+      }));
 
-        update() {
-          this.x += this.speedX;
-          this.y += this.speedY;
-          this.rotation += this.speedX * 2;
-        }
+      let animationFrameId;
+      let startTime = null;
+      const duration = 4000; // confetti runs for 4 seconds
 
-        draw(ctx) {
-          ctx.save();
-          ctx.translate(this.x, this.y);
-          ctx.rotate(this.rotation * Math.PI / 180);
-          ctx.fillStyle = this.color;
+      function drawConfetti(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
 
-          if (this.shape === "circle") {
-            ctx.beginPath();
-            ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
-            ctx.fill();
-          } else {
-            ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
-          }
-
-          ctx.restore();
-        }
-      }
-
-      const confettiPieces = Array.from({ length: 120 }, () => new ConfettiPiece());
-
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+        ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
         confettiPieces.forEach(p => {
-          p.update();
-          p.draw(ctx);
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+          ctx.restore();
+
+          p.y += p.speed;
+          p.rotation += p.speed;
         });
 
-        // Stop once all confetti is out of screen
-        if (confettiPieces.some(p => p.y < canvas.height + 50)) {
-          requestAnimationFrame(animate);
+        if (elapsed < duration) {
+          animationFrameId = requestAnimationFrame(drawConfetti);
         } else {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height); // clear after stop
         }
       }
 
-      animate();
+      animationFrameId = requestAnimationFrame(drawConfetti);
     </script>
   </body>
 </html>
